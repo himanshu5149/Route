@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreadWeave — Auto‑Organized Ideas</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%230d0b14'/><text y='72' x='50' text-anchor='middle' font-size='60'>🧵</text></svg>">
+    <meta name="theme-color" content="#0a0e17">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #07060b;
+            --bg-subtle: #0d0b14;
+            --surface: #13111c;
+            --surface-elevated: #1a1726;
+            --surface-border: rgba(255,255,255,0.06);
+            --surface-border-hover: rgba(255,255,255,0.14);
+            --primary: #8b5cf6;
+            --primary-deep: #7c3aed;
+            --primary-glow: rgba(139,92,246,0.15);
+            --accent: #a78bfa;
+            --accent-warm: #f59e0b;
+            --accent-teal: #14b8a6;
+            --accent-rose: #f43f5e;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --text: #f0ecf7;
+            --text-secondary: #b0a8c0;
+            --text-muted: #6b6280;
+            --danger: #f43f5e;
+            --danger-glow: rgba(244,63,94,0.12);
+            --success: #10b981;
+            --gradient-primary: linear-gradient(135deg, #8b5cf6, #3b82f6, #14b8a6);
+            --gradient-warm: linear-gradient(135deg, #f59e0b, #f43f5e);
+            --gradient-thread: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            --radius: 18px;
+            --radius-sm: 12px;
+            --radius-xs: 8px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+            --shadow-md: 0 8px 30px rgba(0,0,0,0.35);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.45);
+            --shadow-glow: 0 0 40px var(--primary-glow);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f3ff;
+            --bg-subtle: #ede9fe;
+            --surface: #ffffff;
+            --surface-elevated: #ffffff;
+            --surface-border: rgba(0,0,0,0.08);
+            --surface-border-hover: rgba(0,0,0,0.16);
+            --primary: #7c3aed;
+            --primary-glow: rgba(124,58,237,0.08);
+            --text: #1e1033;
+            --text-secondary: #4a4060;
+            --text-muted: #8078a0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-md: 0 8px 30px rgba(0,0,0,0.08);
+            --shadow-lg: 0 20px 60px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ═══ Ambient BG ═══ */
+        .ambient {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            overflow: hidden;
+        }
+        .ambient .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(120px); opacity: 0.10;
+            animation: drift 25s ease-in-out infinite;
+        }
+        .ambient .orb:nth-child(1) {
+            width: 650px; height: 650px; background: var(--primary);
+            top: -250px; right: -150px;
+        }
+        .ambient .orb:nth-child(2) {
+            width: 500px; height: 500px; background: var(--accent-teal);
+            bottom: -200px; left: -120px; animation-delay: -9s;
+        }
+        .ambient .orb:nth-child(3) {
+            width: 400px; height: 400px; background: var(--accent-warm);
+            top: 45%; left: 55%; animation-delay: -16s;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(40px,-50px) scale(1.1); }
+            66% { transform: translate(-30px,40px) scale(0.9); }
+        }
+
+        /* ═══ Header ═══ */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: color-mix(in srgb, var(--bg) 82%, transparent);
+            backdrop-filter: blur(24px) saturate(1.6);
+            border-bottom: 1px solid var(--surface-border);
+        }
+        .header-inner {
+            max-width: 1200px; margin: 0 auto; padding: 0.9rem 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .brand { display: flex; align-items: center; gap: 0.85rem; }
+        .brand-icon {
+            width: 44px; height: 44px; border-radius: 13px;
+            background: var(--gradient-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; box-shadow: var(--shadow-glow);
+        }
+        .brand-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .brand-text span {
+            font-size: 0.68rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.14em;
+        }
+        .header-actions { display: flex; align-items: center; gap: 0.6rem; }
+        .badge {
+            padding: 0.3rem 0.8rem; border-radius: 999px;
+            background: var(--primary-glow); color: var(--accent);
+            font-size: 0.73rem; font-weight: 600;
+            border: 1px solid rgba(139,92,246,0.18);
+        }
+        .icon-btn {
+            width: 40px; height: 40px; border-radius: var(--radius-xs);
+            background: var(--surface); border: 1px solid var(--surface-border);
+            color: var(--text-secondary); cursor: pointer; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .icon-btn:hover {
+            background: var(--surface-elevated);
+            border-color: var(--surface-border-hover);
+            transform: translateY(-1px);
+        }
+
+        /* ═══ Main ═══ */
+        main {
+            position: relative; z-index: 1;
+            max-width: 1200px; width: 100%; margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ═══ Stats ═══ */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--surface-border);
+            border-radius: var(--radius-sm); padding: 1.1rem 1.2rem;
+            transition: var(--transition); position: relative; overflow: hidden;
+        }
+        .stat-card::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: var(--gradient-primary); opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: var(--surface-border-hover); }
+        .stat-card:hover::after { opacity: 1; }
+        .stat-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+        .stat-label {
+            font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em;
+            color: var(--text-muted); margin-bottom: 0.3rem;
+        }
+        .stat-value {
+            font-size: 1.7rem; font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ═══ Input Area ═══ */
+        .input-section {
+            background: var(--surface); border: 1px solid var(--surface-border);
+            border-radius: var(--radius); padding: 1.8rem;
+            margin-bottom: 2rem; position: relative; overflow: hidden;
+        }
+        .input-section::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, var(--primary-glow), transparent 65%);
+            pointer-events: none;
+        }
+        .input-content { position: relative; z-index: 1; }
+        .input-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .input-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+        }
+        .input-subtitle { font-size: 0.82rem; color: var(--text-muted); }
+        .char-counter {
+            font-size: 0.72rem; color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+        #noteInput {
+            width: 100%; min-height: 130px;
+            background: var(--bg); border: 1px solid var(--surface-border);
+            border-radius: var(--radius-sm); padding: 1rem;
+            color: var(--text); font-size: 0.92rem; resize: vertical;
+            font-family: 'Inter', system-ui, sans-serif;
+            line-height: 1.65; transition: var(--transition);
+        }
+        #noteInput:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+        #noteInput::placeholder { color: var(--text-muted); }
+
+        .input-actions {
+            margin-top: 1rem; display: flex; gap: 0.6rem; flex-wrap: wrap;
+            align-items: center;
+        }
+        .weave-btn {
+            padding: 0.75rem 1.5rem; border-radius: var(--radius-sm);
+            background: var(--gradient-primary); border: none;
+            color: #fff; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; transition: var(--transition);
+            display: flex; align-items: center; gap: 0.5rem;
+            box-shadow: var(--shadow-glow);
+        }
+        .weave-btn:hover { transform: translateY(-2px); box-shadow: 0 0 50px var(--primary-glow); }
+        .weave-btn:active { transform: translateY(0); }
+
+        .action-btn {
+            padding: 0.6rem 1.1rem; border-radius: var(--radius-sm);
+            border: 1px solid var(--surface-border); background: var(--surface);
+            color: var(--text-secondary); cursor: pointer; font-size: 0.82rem;
+            font-weight: 500; transition: var(--transition);
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .action-btn:hover { border-color: var(--surface-border-hover); transform: translateY(-1px); }
+        .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+        .quick-templates {
+            display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.8rem;
+        }
+        .template-chip {
+            padding: 0.35rem 0.75rem; border-radius: 999px;
+            background: var(--primary-glow); border: 1px solid rgba(139,92,246,0.12);
+            color: var(--accent); font-size: 0.72rem; font-weight: 500;
+            cursor: pointer; transition: var(--transition);
+        }
+        .template-chip:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* ═══ Toolbar ═══ */
+        .toolbar {
+            display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+            align-items: center;
+        }
+        .search-wrap {
+            flex: 1; position: relative; min-width: 200px;
+        }
+        .search-wrap .search-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); font-size: 0.85rem; pointer-events: none;
+        }
+        #search {
+            width: 100%; padding: 0.72rem 1rem 0.72rem 2.5rem;
+            border: 1px solid var(--surface-border); border-radius: var(--radius-sm);
+            background: var(--surface); color: var(--text); font-size: 0.88rem;
+            transition: var(--transition);
+        }
+        #search:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .view-toggle {
+            display: flex; background: var(--surface);
+            border: 1px solid var(--surface-border); border-radius: var(--radius-sm);
+            padding: 0.2rem; gap: 0.2rem;
+        }
+        .view-btn {
+            padding: 0.45rem 0.7rem; border: none; border-radius: var(--radius-xs);
+            background: transparent; color: var(--text-muted); cursor: pointer;
+            font-size: 0.9rem; transition: var(--transition);
+        }
+        .view-btn.active { background: var(--primary-glow); color: var(--accent); }
+
+        .sort-select {
+            padding: 0.55rem 0.8rem; border-radius: var(--radius-sm);
+            background: var(--surface); border: 1px solid var(--surface-border);
+            color: var(--text); font-size: 0.82rem; cursor: pointer;
+        }
+
+        /* ═══ Summary ═══ */
+        .summary-panel {
+            margin-bottom: 1.5rem; padding: 1.3rem 1.5rem;
+            background: var(--surface); border: 1px solid var(--surface-border);
+            border-radius: var(--radius); display: none;
+            position: relative; overflow: hidden;
+        }
+        .summary-panel::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--gradient-warm);
+        }
+        .summary-panel.active { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .summary-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+        .summary-header h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .summary-close {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 1.1rem;
+        }
+        .summary-content {
+            font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7;
+        }
+        .summary-thread {
+            padding: 0.6rem 0; border-bottom: 1px solid var(--surface-border);
+        }
+        .summary-thread:last-child { border-bottom: none; }
+
+        /* ═══ Grid ═══ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.2rem;
+        }
+        .grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        /* ═══ Card ═══ */
+        .card {
+            background: var(--surface); border: 1px solid var(--surface-border);
+            border-radius: var(--radius); overflow: hidden;
+            transition: var(--transition); position: relative;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: var(--surface-border-hover);
+            box-shadow: var(--shadow-md);
+        }
+        .card-accent {
+            height: 3px;
+        }
+        .card-body { padding: 1.3rem 1.4rem; }
+        .card-top {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 0.8rem;
+        }
+        .card-top-left { flex: 1; }
+        .card-title {
+            font-weight: 700; font-size: 0.95rem; margin-bottom: 0.3rem;
+            line-height: 1.35; cursor: pointer;
+        }
+        .card-title:hover { color: var(--accent); }
+        .card-date { font-size: 0.7rem; color: var(--text-muted); }
+        .card-note-count {
+            padding: 0.2rem 0.55rem; border-radius: 6px;
+            font-size: 0.68rem; font-weight: 700;
+            background: var(--primary-glow); color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .card-snippet {
+            font-size: 0.84rem; color: var(--text-secondary);
+            line-height: 1.55; margin-bottom: 1rem;
+            display: -webkit-box; -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical; overflow: hidden;
+            cursor: pointer;
+        }
+        .card-snippet.expanded {
+            -webkit-line-clamp: unset;
+        }
+        .card-snippet mark {
+            background: var(--primary-glow); color: var(--accent);
+            border-radius: 3px; padding: 0 3px;
+        }
+
+        /* Tags */
+        .card-tags {
+            display: flex; flex-wrap: wrap; gap: 0.35rem;
+            margin-bottom: 1rem;
+        }
+        .tag {
+            padding: 0.2rem 0.6rem; border-radius: 999px;
+            font-size: 0.68rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition);
+        }
+        .tag-keyword {
+            background: rgba(139,92,246,0.12); color: var(--accent);
+            border: 1px solid rgba(139,92,246,0.15);
+        }
+        .tag-keyword:hover { background: var(--primary); color: white; }
+        .tag-name {
+            background: rgba(20,184,166,0.12); color: var(--accent-teal);
+            border: 1px solid rgba(20,184,166,0.15);
+        }
+        .tag-name:hover { background: var(--accent-teal); color: white; }
+        .tag-sentiment {
+            font-size: 0.65rem; padding: 0.18rem 0.5rem;
+        }
+        .tag-positive { background: rgba(16,185,129,0.12); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.15); }
+        .tag-negative { background: rgba(244,63,94,0.12); color: var(--accent-rose); border: 1px solid rgba(244,63,94,0.15); }
+        .tag-neutral { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--surface-border); }
+
+        /* Connection line */
+        .connection-indicator {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 0.8rem; font-size: 0.72rem; color: var(--text-muted);
+        }
+        .connection-bar {
+            flex: 1; height: 4px; border-radius: 2px;
+            background: var(--surface-border); overflow: hidden;
+        }
+        .connection-fill {
+            height: 100%; border-radius: 2px;
+            background: var(--gradient-primary);
+            transition: width 0.6s ease;
+        }
+
+        .card-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-top: 0.8rem; border-top: 1px solid var(--surface-border);
+        }
+        .card-meta {
+            display: flex; gap: 0.8rem; font-size: 0.72rem; color: var(--text-muted);
+        }
+        .card-actions { display: flex; gap: 0.3rem; }
+        .card-action {
+            width: 30px; height: 30px; border-radius: var(--radius-xs);
+            background: transparent; border: 1px solid transparent;
+            color: var(--text-muted); cursor: pointer; font-size: 0.82rem;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition);
+        }
+        .card-action:hover {
+            background: var(--surface-elevated); border-color: var(--surface-border);
+        }
+        .card-action.pin.active { color: var(--accent-warm); }
+        .card-action.delete:hover { color: var(--danger); border-color: var(--danger); }
+
+        /* Expanded notes inside card */
+        .thread-notes {
+            display: none; margin-top: 0.8rem;
+            padding-top: 0.8rem; border-top: 1px dashed var(--surface-border);
+        }
+        .thread-notes.visible { display: block; }
+        .thread-note {
+            padding: 0.6rem 0.8rem; margin-bottom: 0.4rem;
+            background: var(--bg); border-radius: var(--radius-xs);
+            font-size: 0.82rem; color: var(--text-secondary);
+            line-height: 1.5; position: relative;
+        }
+        .thread-note-date {
+            font-size: 0.65rem; color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+        .thread-note-delete {
+            position: absolute; top: 0.4rem; right: 0.5rem;
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 0.75rem; opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .thread-note:hover .thread-note-delete { opacity: 1; }
+        .thread-note-delete:hover { color: var(--danger); }
+
+        /* ═══ Modal ═══ */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            padding: 2rem;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--surface-border);
+            border-radius: var(--radius); max-width: 650px; width: 100%;
+            max-height: 85vh; overflow-y: auto; padding: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem; margin-bottom: 0.5rem;
+        }
+        .modal-meta {
+            font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.2rem;
+        }
+        .modal-text {
+            font-size: 0.9rem; color: var(--text-secondary);
+            line-height: 1.75; white-space: pre-wrap; margin-bottom: 1.5rem;
+        }
+        .modal-tags { margin-bottom: 1.2rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .modal-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        /* ═══ Empty ═══ */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center; padding: 4rem 2rem;
+        }
+        .empty-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.25; }
+        .empty-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem; margin-bottom: 0.5rem;
+        }
+        .empty-desc { color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto; }
+
+        /* ═══ Toast ═══ */
+        .toast-container {
+            position: fixed; bottom: 24px; right: 24px;
+            z-index: 300; display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .toast {
+            padding: 0.8rem 1.3rem; border-radius: var(--radius-sm);
+            background: var(--surface-elevated); border: 1px solid var(--surface-border);
+            box-shadow: var(--shadow-md); font-size: 0.85rem;
+            display: flex; align-items: center; gap: 0.6rem;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+        }
+        .toast.show { transform: translateX(0); }
+
+        /* ═══ Footer ═══ */
+        footer {
+            position: relative; z-index: 1;
+            text-align: center; padding: 2rem;
+            color: var(--text-muted); font-size: 0.78rem;
+            border-top: 1px solid var(--surface-border);
+        }
+        .keyboard-hints {
+            margin-top: 0.5rem; display: flex; justify-content: center;
+            gap: 1rem; flex-wrap: wrap;
+        }
+        .kbd {
+            padding: 0.15rem 0.45rem; border-radius: 4px;
+            background: var(--surface); border: 1px solid var(--surface-border);
+            font-size: 0.65rem; font-family: monospace;
+        }
+
+        /* ═══ Scrollbar ═══ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 3px; }
+
+        /* ═══ Responsive ═══ */
+        @media (max-width: 768px) {
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+            .grid { grid-template-columns: 1fr; }
+            main { padding: 1rem; }
+            .header-inner { padding: 0.7rem 1rem; }
+            .input-section { padding: 1.2rem; }
+            .keyboard-hints { display: none; }
+        }
+
+        /* ═══ Animations ═══ */
+        .card {
+            animation: cardIn 0.4s ease forwards;
+            opacity: 0;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:nth-child(1) { animation-delay: 0s; }
+        .card:nth-child(2) { animation-delay: 0.06s; }
+        .card:nth-child(3) { animation-delay: 0.12s; }
+        .card:nth-child(4) { animation-delay: 0.18s; }
+        .card:nth-child(5) { animation-delay: 0.24s; }
+        .card:nth-child(6) { animation-delay: 0.30s; }
+    </style>
+</head>
+<body>
+
+<div class="ambient">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+</div>
+
+<header>
+    <div class="header-inner">
+        <div class="brand">
+            <div class="brand-icon">🧵</div>
+            <div class="brand-text">
+                <h1>ThreadWeave</h1>
+                <span>Auto-Organized Ideas</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <span class="badge" id="countBadge">0 threads</span>
+            <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon">🧵</div>
+            <div class="stat-label">Threads</div>
+            <div class="stat-value" id="statThreads">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-label">Total Notes</div>
+            <div class="stat-value" id="statNotes">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔑</div>
+            <div class="stat-label">Keywords</div>
+            <div class="stat-value" id="statKeywords">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div class="stat-label">People</div>
+            <div class="stat-value" id="statPeople">0</div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <section class="input-section">
+        <div class="input-content">
+            <div class="input-header">
+                <div>
+                    <div class="input-title">Weave a New Thread</div>
+                    <div class="input-subtitle">Paste any text — meeting notes, ideas, snippets. We'll auto-organize it.</div>
+                </div>
+                <div class="char-counter" id="charCounter">0 chars · 0 words</div>
+            </div>
+            <textarea id="noteInput" placeholder="Start typing or paste text here...&#10;&#10;Examples:&#10;• Meeting with Sarah about Q4 budget allocation&#10;• Idea: maybe we could use AI to auto-categorize support tickets&#10;• Remember to buy groceries and call the dentist"></textarea>
+            <div class="input-actions">
+                <button class="weave-btn" id="addNoteBtn">
+                    <span>🧠</span> Add & Weave
+                </button>
+                <button class="action-btn" id="clearInputBtn">✕ Clear</button>
+                <button class="action-btn" id="pasteBtn">📋 Paste</button>
+            </div>
+            <div class="quick-templates">
+                <span style="font-size:0.72rem;color:var(--text-muted);margin-right:0.3rem;">Quick:</span>
+                <button class="template-chip" data-tpl="meeting">📅 Meeting Notes</button>
+                <button class="template-chip" data-tpl="idea">💡 Idea</button>
+                <button class="template-chip" data-tpl="todo">✅ To-Do</button>
+                <button class="template-chip" data-tpl="journal">📓 Journal</button>
+                <button class="template-chip" data-tpl="research">🔬 Research</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="search" placeholder="Search threads, keywords, people...">
+        </div>
+        <div class="view-toggle">
+            <button class="view-btn active" data-view="grid" title="Grid view">▦</button>
+            <button class="view-btn" data-view="list" title="List view">☰</button>
+        </div>
+        <select class="sort-select" id="sortSelect">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="largest">Most notes</option>
+            <option value="alpha">Alphabetical</option>
+        </select>
+        <button class="action-btn" id="summaryBtn">📋 Summarize</button>
+        <button class="action-btn" id="exportBtn">📥 Export</button>
+        <button class="action-btn danger" id="clearAllBtn">🗑 Clear All</button>
+    </div>
+
+    <!-- Summary Panel -->
+    <div class="summary-panel" id="summaryPanel">
+        <div class="summary-header">
+            <h3>📋 Executive Summary</h3>
+            <button class="summary-close" id="summaryClose">✕</button>
+        </div>
+        <div class="summary-content" id="summaryContent"></div>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid" id="grid">
+        <div class="empty-state">
+            <div class="empty-icon">🧵</div>
+            <div class="empty-title">No Threads Yet</div>
+            <div class="empty-desc">Add your first note above and watch ThreadWeave automatically organize your thoughts into connected threads.</div>
+        </div>
+    </div>
+</main>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+        <h2 id="modalTitle">Thread Detail</h2>
+        <div class="modal-meta" id="modalMeta"></div>
+        <div class="modal-tags" id="modalTags"></div>
+        <div class="modal-text" id="modalText"></div>
+        <div class="modal-actions">
+            <button class="action-btn" id="modalCopy">📋 Copy All</button>
+            <button class="action-btn" id="modalClose">✕ Close</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    🔒 Everything processed locally. No cloud, no servers, no tracking.
+    <div class="keyboard-hints">
+        <span><span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> Add note</span>
+        <span><span class="kbd">/</span> Search</span>
+        <span><span class="kbd">Esc</span> Close</span>
+    </div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+(() => {
+    // ═══ IndexedDB ═══
+    const DB = 'ThreadWeaveDB_v3', STORE = 'notes';
+    let db;
+
+    function openDB() {
+        return new Promise((res, rej) => {
+            const r = indexedDB.open(DB, 1);
+            r.onupgradeneeded = e => {
+                const d = e.target.result;
+                if (!d.objectStoreNames.contains(STORE)) {
+                    const s = d.createObjectStore(STORE, { keyPath: 'id' });
+                    s.createIndex('timestamp', 'timestamp');
+                }
+            };
+            r.onsuccess = e => { db = e.target.result; res(); };
+            r.onerror = rej;
+        });
+    }
+
+    const dbPut = rec => new Promise(r => db.transaction(STORE,'readwrite').objectStore(STORE).put(rec).onsuccess = r);
+    const dbDel = id => new Promise(r => db.transaction(STORE,'readwrite').objectStore(STORE).delete(id).onsuccess = r);
+    const dbClear = () => new Promise(r => db.transaction(STORE,'readwrite').objectStore(STORE).clear().onsuccess = r);
+
+    function dbGetAll(query = '') {
+        return new Promise(res => {
+            const tx = db.transaction(STORE,'readonly').objectStore(STORE);
+            const idx = tx.index('timestamp');
+            const out = [];
+            idx.openCursor(null,'prev').onsuccess = e => {
+                const c = e.target.result;
+                if (c) {
+                    const v = c.value;
+                    const q = query.toLowerCase();
+                    if (!q || v.text.toLowerCase().includes(q) ||
+                        (v.keywords && v.keywords.some(k => k.includes(q))) ||
+                        (v.names && v.names.some(n => n.toLowerCase().includes(q))))
+                        out.push(v);
+                    c.continue();
+                } else res(out);
+            };
+        });
+    }
+
+    // ═══ Elements ═══
+    const $ = id => document.getElementById(id);
+    const noteInput = $('noteInput'), grid = $('grid');
+    const search = $('search'), countBadge = $('countBadge');
+    const summaryPanel = $('summaryPanel'), summaryContent = $('summaryContent');
+    const modalOverlay = $('modalOverlay');
+    const sortSelect = $('sortSelect');
+
+    // ═══ NLP Helpers ═══
+    const STOP_WORDS = new Set('the a an is are was were be been being have has had having do does did doing will would shall should may might must can could of in to for with on at by from about as into through during before after above below between out off over under again further then once here there when where why how all each every both few more most other some such no nor not only own same so than too very just because but and or if while although however also etc i me my we our you your he she it they them their its this that these those'.split(' '));
+
+    function extractKeywords(text) {
+        const words = text.toLowerCase().replace(/[^a-z0-9\s'-]/g, '').split(/\s+/);
+        const freq = {};
+        words.forEach(w => {
+            if (w.length > 2 && !STOP_WORDS.has(w)) freq[w] = (freq[w]||0) + 1;
+        });
+
+        // Bigrams
+        for (let i = 0; i < words.length - 1; i++) {
+            const bi = words[i] + ' ' + words[i+1];
+            if (!STOP_WORDS.has(words[i]) && !STOP_WORDS.has(words[i+1]) &&
+                words[i].length > 2 && words[i+1].length > 2) {
+                freq[bi] = (freq[bi]||0) + 2;
+            }
+        }
+
+        return Object.entries(freq)
+            .sort((a,b) => b[1]-a[1])
+            .slice(0, 10)
+            .map(e => e[0]);
+    }
+
+    function extractNames(text) {
+        const matches = text.match(/\b[A-Z][a-z]{1,15}(?:\s[A-Z][a-z]{1,15})+\b/g);
+        const common = new Set(['The','This','That','These','Those','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','January','February','March','April','May','June','July','August','September','October','November','December','New','United','North','South','East','West']);
+        if (!matches) return [];
+        return [...new Set(matches)].filter(n => !common.has(n.split(' ')[0]));
+    }
+
+    function analyzeSentiment(text) {
+        const positive = /\b(great|good|excellent|amazing|wonderful|happy|love|fantastic|brilliant|awesome|perfect|excited|pleased|delighted|success|win|achievement|progress|improve|better)\b/gi;
+        const negative = /\b(bad|terrible|awful|horrible|sad|hate|poor|wrong|fail|issue|problem|concern|worry|difficult|frustrated|angry|disappointed|delay|risk|loss)\b/gi;
+        const pCount = (text.match(positive) || []).length;
+        const nCount = (text.match(negative) || []).length;
+        if (pCount > nCount + 1) return 'positive';
+        if (nCount > pCount + 1) return 'negative';
+        return 'neutral';
+    }
+
+    function detectCategory(text) {
+        const t = text.toLowerCase();
+        if (/\b(meeting|agenda|minutes|discussed|action items|attendees|conference)\b/.test(t)) return { label: '📅 Meeting', color: '#3b82f6' };
+        if (/\b(idea|concept|brainstorm|what if|imagine|innovation|creative|prototype)\b/.test(t)) return { label: '💡 Idea', color: '#f59e0b' };
+        if (/\b(todo|task|reminder|deadline|due|buy|call|email|schedule|appointment)\b/.test(t)) return { label: '✅ To-Do', color: '#10b981' };
+        if (/\b(research|study|paper|data|analysis|findings|hypothesis|experiment|survey)\b/.test(t)) return { label: '🔬 Research', color: '#8b5cf6' };
+        if (/\b(feel|journal|diary|today|morning|evening|thought|reflect|grateful)\b/.test(t)) return { label: '📓 Journal', color: '#f43f5e' };
+        return { label: '📝 Note', color: '#6b7280' };
+    }
+
+    function wordCount(t) { return t.trim() ? t.trim().split(/\s+/).length : 0; }
+
+    // ═══ Thread Building ═══
+    function buildThreads(notes) {
+        const threads = [];
+        const used = new Set();
+
+        // Sort pinned first
+        const sorted = [...notes].sort((a,b) => {
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            return 0;
+        });
+
+        sorted.forEach(note => {
+            if (used.has(note.id)) return;
+            const thread = [note];
+            used.add(note.id);
+
+            for (const other of notes) {
+                if (used.has(other.id)) continue;
+                const shared = note.keywords?.filter(k => other.keywords?.includes(k)) || [];
+                if (shared.length >= 1) {
+                    thread.push(other);
+                    used.add(other.id);
+                }
+            }
+            threads.push(thread);
+        });
+        return threads;
+    }
+
+    function getThreadStrength(thread) {
+        if (thread.length <= 1) return 0;
+        const allKw = thread.flatMap(n => n.keywords || []);
+        const unique = new Set(allKw);
+        const overlap = allKw.length - unique.size;
+        return Math.min(100, Math.round((overlap / Math.max(allKw.length, 1)) * 200));
+    }
+
+    function sortThreads(threads, mode) {
+        switch(mode) {
+            case 'oldest':
+                return threads.sort((a,b) => a[a.length-1].timestamp - b[b.length-1].timestamp);
+            case 'largest':
+                return threads.sort((a,b) => b.length - a.length);
+            case 'alpha':
+                return threads.sort((a,b) => a[0].text.localeCompare(b[0].text));
+            default: // newest
+                return threads.sort((a,b) => b[0].timestamp - a[0].timestamp);
+        }
+    }
+
+    // ═══ Templates ═══
+    const templates = {
+        meeting: "Meeting Notes\nDate: \nAttendees: \n\nAgenda:\n1. \n\nDiscussion:\n\nAction Items:\n- ",
+        idea: "💡 Idea: \n\nProblem it solves:\n\nHow it works:\n\nNext steps:\n- ",
+        todo: "To-Do List\n\n- [ ] \n- [ ] \n- [ ] \n\nDeadline: \nPriority: ",
+        journal: "Journal Entry — " + new Date().toLocaleDateString() + "\n\nToday I...\n\nI'm grateful for...\n\nTomorrow I want to...",
+        research: "Research Notes\nTopic: \nSource: \n\nKey Findings:\n1. \n\nQuestions:\n- \n\nConclusion:\n"
+    };
+
+    // ═══ Toast ═══
+    function showToast(msg, type = 'success') {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '⚠️' : 'ℹ️'}</span><span>${msg}</span>`;
+        $('toastContainer').appendChild(t);
+        requestAnimationFrame(() => t.classList.add('show'));
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 400); }, 3000);
+    }
+
+    // ═══ Highlight ═══
+    function highlight(text, query) {
+        if (!query) return text;
+        return text.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<mark>$1</mark>');
+    }
+
+    // ═══ Stats ═══
+    async function updateStats() {
+        const all = await dbGetAll();
+        const threads = buildThreads(all);
+        const allKw = [...new Set(all.flatMap(n => n.keywords || []))];
+        const allNames = [...new Set(all.flatMap(n => n.names || []))];
+        $('statThreads').textContent = threads.length;
+        $('statNotes').textContent = all.length;
+        $('statKeywords').textContent = allKw.length;
+        $('statPeople').textContent = allNames.length;
+    }
+
+    // ═══ Char Counter ═══
+    noteInput.addEventListener('input', () => {
+        const text = noteInput.value;
+        $('charCounter').textContent = `${text.length} chars · ${wordCount(text)} words`;
+    });
+
+    // ═══ Render Grid ═══
+    let currentView = 'grid';
+
+    async function renderGrid() {
+        const q = search.value;
+        const notes = await dbGetAll(q);
+        let threads = buildThreads(notes);
+        threads = sortThreads(threads, sortSelect.value);
+
+        countBadge.textContent = threads.length + ' thread' + (threads.length !== 1 ? 's' : '');
+
+        if (!threads.length) {
+            grid.innerHTML = `<div class="empty-state">
+                <div class="empty-icon">${q ? '🔍' : '🧵'}</div>
+                <div class="empty-title">${q ? 'No Matches' : 'No Threads Yet'}</div>
+                <div class="empty-desc">${q ? 'Try different keywords.' : 'Add your first note above and watch ideas organize themselves.'}</div>
+            </div>`;
+            return;
+        }
+
+        grid.className = `grid ${currentView === 'list' ? 'list-view' : ''}`;
+        grid.innerHTML = '';
+
+        threads.forEach((thread, idx) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.style.animationDelay = `${idx * 0.06}s`;
+
+            const primary = thread[0];
+            const cat = detectCategory(thread.map(n=>n.text).join(' '));
+            const sentiment = analyzeSentiment(thread.map(n=>n.text).join(' '));
+            const strength = getThreadStrength(thread);
+            const allKw = [...new Set(thread.flatMap(n => n.keywords || []))].slice(0,6);
+            const allNames = [...new Set(thread.flatMap(n => n.names || []))].slice(0,3);
+            const headline = primary.text.substring(0,90) + (primary.text.length > 90 ? '…' : '');
+            const snippet = thread.map(n => n.text.substring(0,60)).join(' · ');
+            const isPinned = thread.some(n => n.pinned);
+            const dateStr = new Date(primary.timestamp).toLocaleDateString(undefined, {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            const sentimentTag = sentiment === 'positive'
+                ? '<span class="tag tag-sentiment tag-positive">😊 Positive</span>'
+                : sentiment === 'negative'
+                    ? '<span class="tag tag-sentiment tag-negative">😟 Negative</span>'
+                    : '<span class="tag tag-sentiment tag-neutral">😐 Neutral</span>';
+
+            card.innerHTML = `
+                <div class="card-accent" style="background:linear-gradient(90deg,${cat.color},var(--primary))"></div>
+                <div class="card-body">
+                    <div class="card-top">
+                        <div class="card-top-left">
+                            <div class="card-title">${isPinned ? '📌 ' : ''}${highlight(headline, q)}</div>
+                            <div class="card-date">${cat.label} · ${dateStr}</div>
+                        </div>
+                        <div class="card-note-count">${thread.length} note${thread.length > 1 ? 's' : ''}</div>
+                    </div>
+                    <div class="card-snippet">${highlight(snippet, q)}</div>
+                    <div class="card-tags">
+                        ${allKw.map(k => `<span class="tag tag-keyword" data-kw="${k}">${k}</span>`).join('')}
+                        ${allNames.map(n => `<span class="tag tag-name">👤 ${n}</span>`).join('')}
+                        ${sentimentTag}
+                    </div>
+                    ${thread.length > 1 ? `
+                    <div class="connection-indicator">
+                        <span>🔗 Connection</span>
+                        <div class="connection-bar"><div class="connection-fill" style="width:${strength}%"></div></div>
+                        <span>${strength}%</span>
+                    </div>` : ''}
+                    <div class="card-footer">
+                        <div class="card-meta">
+                            <span>📝 ${thread.reduce((s,n)=>s+wordCount(n.text),0)} words</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="card-action expand" title="Expand">📖</button>
+                            <button class="card-action pin ${isPinned ? 'active' : ''}" title="Pin">📌</button>
+                            <button class="card-action copy" title="Copy">📋</button>
+                            <button class="card-action delete" title="Delete thread">🗑</button>
+                        </div>
+                    </div>
+                    <div class="thread-notes" id="tn-${idx}">
+                        ${thread.map(n => `
+                            <div class="thread-note">
+                                <div class="thread-note-date">${new Date(n.timestamp).toLocaleString()}</div>
+                                ${n.text}
+                                <button class="thread-note-delete" data-id="${n.id}">✕</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Tag click -> search
+            card.querySelectorAll('.tag-keyword').forEach(tag => {
+                tag.addEventListener('click', e => {
+                    e.stopPropagation();
+                    search.value = tag.dataset.kw;
+                    renderGrid();
+                });
+            });
+
+            // Expand/collapse
+            card.querySelector('.expand').addEventListener('click', e => {
+                e.stopPropagation();
+                const tn = card.querySelector('.thread-notes');
+                tn.classList.toggle('visible');
+            });
+
+            // Pin
+            card.querySelector('.pin').addEventListener('click', async e => {
+                e.stopPropagation();
+                for (const n of thread) {
+                    n.pinned = !isPinned;
+                    await dbPut(n);
+                }
+                renderGrid();
+                showToast(isPinned ? 'Unpinned' : 'Pinned to top 📌');
+            });
+
+            // Copy
+            card.querySelector('.copy').addEventListener('click', e => {
+                e.stopPropagation();
+                const text = thread.map(n => n.text).join('\n\n---\n\n');
+                navigator.clipboard.writeText(text).then(() => showToast('Thread copied!'));
+            });
+
+            // Delete thread
+            card.querySelector('.delete').addEventListener('click', async e => {
+                e.stopPropagation();
+                if (confirm(`Delete this thread (${thread.length} notes)?`)) {
+                    for (const n of thread) await dbDel(n.id);
+                    renderGrid(); updateStats();
+                    showToast('Thread deleted');
+                }
+            });
+
+            // Delete individual notes
+            card.querySelectorAll('.thread-note-delete').forEach(btn => {
+                btn.addEventListener('click', async e => {
+                    e.stopPropagation();
+                    await dbDel(btn.dataset.id);
+                    renderGrid(); updateStats();
+                    showToast('Note removed');
+                });
+            });
+
+            // Title click -> modal
+            card.querySelector('.card-title').addEventListener('click', e => {
+                e.stopPropagation();
+                openModal(thread);
+            });
+
+            // Snippet toggle
+            card.querySelector('.card-snippet').addEventListener('click', e => {
+                e.target.classList.toggle('expanded');
+            });
+
+            grid.appendChild(card);
+        });
+    }
+
+    // ═══ Modal ═══
+    function openModal(thread) {
+        const cat = detectCategory(thread.map(n=>n.text).join(' '));
+        const allKw = [...new Set(thread.flatMap(n => n.keywords || []))];
+        const allNames = [...new Set(thread.flatMap(n => n.names || []))];
+
+        $('modalTitle').textContent = `${cat.label} Thread — ${thread.length} note${thread.length > 1 ? 's' : ''}`;
+        $('modalMeta').textContent = `Created: ${new Date(thread[thread.length-1].timestamp).toLocaleString()} · Last: ${new Date(thread[0].timestamp).toLocaleString()} · ${thread.reduce((s,n)=>s+wordCount(n.text),0)} words`;
+
+        $('modalTags').innerHTML = [
+            ...allKw.map(k => `<span class="tag tag-keyword">${k}</span>`),
+            ...allNames.map(n => `<span class="tag tag-name">👤 ${n}</span>`)
+        ].join('');
+
+        $('modalText').textContent = thread.map((n,i) =>
+            `[${new Date(n.timestamp).toLocaleString()}]\n${n.text}`
+        ).join('\n\n— — —\n\n');
+
+        $('modalCopy').onclick = () => {
+            navigator.clipboard.writeText($('modalText').textContent).then(() => showToast('Copied!'));
+        };
+
+        modalOverlay.classList.add('active');
+    }
+
+    $('modalClose').addEventListener('click', () => modalOverlay.classList.remove('active'));
+    modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('active'); });
+
+    // ═══ Add Note ═══
+    async function addCurrentNote() {
+        const text = noteInput.value.trim();
+        if (!text) { showToast('Please enter some text', 'error'); return; }
+        if (text.length < 3) { showToast('Note too short', 'error'); return; }
+
+        const keywords = extractKeywords(text);
+        const names = extractNames(text);
+        const record = {
+            id: 'note_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+            text,
+            keywords,
+            names,
+            timestamp: Date.now(),
+            pinned: false
+        };
+        await dbPut(record);
+        noteInput.value = '';
+        $('charCounter').textContent = '0 chars · 0 words';
+        showToast('Note woven into threads! 🧵');
+        renderGrid(); updateStats();
+    }
+
+    $('addNoteBtn').addEventListener('click', addCurrentNote);
+    $('clearInputBtn').addEventListener('click', () => {
+        noteInput.value = '';
+        $('charCounter').textContent = '0 chars · 0 words';
+    });
+    $('pasteBtn').addEventListener('click', async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            noteInput.value = text;
+            noteInput.dispatchEvent(new Event('input'));
+            showToast('Pasted from clipboard');
+        } catch { showToast('Clipboard access denied', 'error'); }
+    });
+
+    // Templates
+    document.querySelectorAll('.template-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            noteInput.value = templates[chip.dataset.tpl] || '';
+            noteInput.dispatchEvent(new Event('input'));
+            noteInput.focus();
+            showToast('Template loaded');
+        });
+    });
+
+    // ═══ Search ═══
+    let debounce;
+    search.addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(renderGrid, 200);
+    });
+
+    // ═══ Sort ═══
+    sortSelect.addEventListener('change', renderGrid);
+
+    // ═══ View Toggle ═══
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentView = btn.dataset.view;
+            renderGrid();
+        });
+    });
+
+    // ═══ Summary ═══
+    $('summaryBtn').addEventListener('click', async () => {
+        const notes = await dbGetAll();
+        if (!notes.length) { showToast('No notes to summarize', 'error'); return; }
+        const threads = buildThreads(notes);
+
+        let html = '';
+        threads.forEach((thread, i) => {
+            const cat = detectCategory(thread.map(n=>n.text).join(' '));
+            const kw = [...new Set(thread.flatMap(n => n.keywords || []))].slice(0,5);
+            const names = [...new Set(thread.flatMap(n => n.names || []))];
+            const sentiment = analyzeSentiment(thread.map(n=>n.text).join(' '));
+            const emoji = sentiment === 'positive' ? '😊' : sentiment === 'negative' ? '😟' : '😐';
+            html += `<div class="summary-thread">
+                <strong>${cat.label} Thread ${i+1}</strong> ${emoji} · ${thread.length} notes · Keywords: <em>${kw.join(', ') || 'none'}</em>
+                ${names.length ? ' · People: <em>' + names.join(', ') + '</em>' : ''}
+            </div>`;
+        });
+
+        summaryContent.innerHTML = html;
+        summaryPanel.classList.add('active');
+    });
+    $('summaryClose').addEventListener('click', () => summaryPanel.classList.remove('active'));
+
+    // ═══ Export ═══
+    $('exportBtn').addEventListener('click', async () => {
+        const notes = await dbGetAll();
+        if (!notes.length) { showToast('Nothing to export', 'error'); return; }
+        const threads = buildThreads(notes);
+
+        let md = `# ThreadWeave Export\n_${new Date().toLocaleString()}_\n\n`;
+        md += `**${notes.length} notes** in **${threads.length} threads**\n\n---\n\n`;
+
+        threads.forEach((thread, i) => {
+            const cat = detectCategory(thread.map(n=>n.text).join(' '));
+            const kw = [...new Set(thread.flatMap(n => n.keywords || []))];
+            md += `## ${cat.label} Thread ${i+1}\n`;
+            md += `Keywords: ${kw.join(', ')}\n\n`;
+            thread.forEach(n => {
+                md += `### ${new Date(n.timestamp).toLocaleString()}\n${n.text}\n\n`;
+            });
+            md += `---\n\n`;
+        });
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+        a.download = `threadweave_${Date.now()}.md`;
+        a.click();
+        showToast('Exported as Markdown! 📥');
+    });
+
+    // ═══ Clear All ═══
+    $('clearAllBtn').addEventListener('click', async () => {
+        if (confirm('Delete ALL notes and threads? This cannot be undone.')) {
+            await dbClear();
+            renderGrid(); updateStats();
+            summaryPanel.classList.remove('active');
+            showToast('Everything cleared');
+        }
+    });
+
+    // ═══ Theme ═══
+    const savedTheme = localStorage.getItem('tw-theme');
+    if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        $('themeToggle').textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+    }
+    $('themeToggle').addEventListener('click', () => {
+        const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        $('themeToggle').textContent = next === 'dark' ? '🌙' : '☀️';
+        localStorage.setItem('tw-theme', next);
+    });
+
+    // ═══ Keyboard Shortcuts ═══
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            modalOverlay.classList.remove('active');
+            summaryPanel.classList.remove('active');
+        }
+        if (e.key === '/' && document.activeElement !== noteInput && document.activeElement !== search) {
+            e.preventDefault(); search.focus();
+        }
+        if (e.ctrlKey && e.key === 'Enter' && document.activeElement === noteInput) {
+            e.preventDefault(); addCurrentNote();
+        }
+    });
+
+    // ═══ Init ═══
+    openDB().then(() => { renderGrid(); updateStats(); });
+})();
+</script>
+</body>
+</html>
